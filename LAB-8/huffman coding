@@ -1,0 +1,212 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 100
+#define N 9
+
+struct Node {
+    char ch;
+    int freq;
+    int left, right;
+};
+
+struct Node nodes[MAX];
+int nodeCount = 0;
+
+
+int pq[MAX];
+int pqSize = 0;
+struct AdjNode {
+    int child;
+    struct AdjNode *next;
+};
+
+struct AdjNode *adj[MAX];
+int createNode(char ch, int freq, int left, int right) {
+    int idx = nodeCount++;
+
+    nodes[idx].ch = ch;
+    nodes[idx].freq = freq;
+    nodes[idx].left = left;
+    nodes[idx].right = right;
+
+    adj[idx] = NULL;
+    return idx;
+}
+
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+
+void insert(int idx) {
+    int i = pqSize++;
+    pq[i] = idx;
+
+    while (i > 0) {
+        int parent = (i - 1) / 2;
+
+        if (nodes[pq[parent]].freq <= nodes[pq[i]].freq)
+            break;
+
+        swap(&pq[parent], &pq[i]);
+        i = parent;
+    }
+}
+
+
+int extractMin() {
+    int result = pq[0];
+    pq[0] = pq[--pqSize];
+
+    int i = 0;
+
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+
+        if (left < pqSize &&
+            nodes[pq[left]].freq < nodes[pq[smallest]].freq)
+            smallest = left;
+
+        if (right < pqSize &&
+            nodes[pq[right]].freq < nodes[pq[smallest]].freq)
+            smallest = right;
+
+        if (smallest == i)
+            break;
+
+        swap(&pq[i], &pq[smallest]);
+        i = smallest;
+    }
+
+    return result;
+}
+
+
+void addEdge(int parent, int child) {
+    struct AdjNode *newNode =
+        (struct AdjNode *)malloc(sizeof(struct AdjNode));
+
+    newNode->child = child;
+    newNode->next = NULL;
+
+    if (adj[parent] == NULL) {
+        adj[parent] = newNode;
+    } else {
+        struct AdjNode *temp = adj[parent];
+
+        while (temp->next != NULL)
+            temp = temp->next;
+
+        temp->next = newNode;
+    }
+}
+
+void displayAdjacencyList() {
+    printf("\nAdjacency List:\n");
+
+    for (int i = 0; i < nodeCount; i++) {
+        printf("Node %d (freq=%d) -> ",
+               i, nodes[i].freq);
+
+        struct AdjNode *temp = adj[i];
+
+        if (temp == NULL) {
+            printf("Leaf (%c)", nodes[i].ch);
+        }
+
+        while (temp != NULL) {
+            printf("%d ", temp->child);
+            temp = temp->next;
+        }
+
+        printf("\n");
+    }
+}
+
+void generateCodes(int root, char code[], int depth) {
+    if (nodes[root].left == -1 &&
+        nodes[root].right == -1) {
+
+        code[depth] = '\0';
+
+        printf("%c : %s\n", nodes[root].ch,
+               depth == 0 ? "0" : code);
+        return;
+    }
+
+    code[depth] = '0';
+    generateCodes(nodes[root].left, code, depth + 1);
+
+    
+    code[depth] = '1';
+    generateCodes(nodes[root].right, code, depth + 1);
+}
+
+int main() {
+    char letters[N] = {'a', 'c', 'd', 'e', 'o',
+                       'm', 's', 't', 'u'};
+
+    int freq[N] = {20, 11, 2, 10, 15,
+                   8, 10, 22, 2};
+
+    
+    for (int i = 0; i < N; i++) {
+        int idx = createNode(letters[i], freq[i], -1, -1);
+        insert(idx);
+    }
+
+    printf("Huffman Tree Construction:\n");
+
+    
+    while (pqSize > 1) {
+        int left = extractMin();
+        int right = extractMin();
+
+        int sum = nodes[left].freq + nodes[right].freq;
+
+        int parent = createNode('\0', sum, left, right);
+
+        
+        addEdge(parent, left);
+        addEdge(parent, right);
+
+        insert(parent);
+
+        printf("%d + %d = %d\n",
+               nodes[left].freq, nodes[right].freq, sum);
+    }
+
+    int root = extractMin();
+
+    displayAdjacencyList();
+
+    printf("\nHuffman Codes:\n");
+    char code[MAX];
+    generateCodes(root, code, 0);
+
+    
+    int totalBits = 0;
+
+    for (int i = 0; i < N; i++) {
+        int leaf = i;
+        char tempCode[MAX];
+        int depth = 0;
+        int found = 0;
+
+        (void)tempCode;
+        
+        (void)depth;
+        (void)found;
+
+        
+    }
+
+    return 0;
+}
